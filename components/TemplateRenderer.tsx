@@ -234,7 +234,7 @@ export function TemplateRenderer({
             <TemplateLayout>
               {isBuilderContext && <BuilderOverlay />}
               <Suspense fallback={<RouteLoadingSkeleton canonicalPath={canonicalPath} />}>
-                <div key={canonicalPath} className="w-full transition-opacity duration-75 ease-out">
+                <div key={canonicalPath} className="w-full animate-section-in">
                   <TemplateComponent params={componentParams} />
                 </div>
               </Suspense>
