@@ -19,9 +19,9 @@ const prismaClientSingleton = () => {
                 
               if (retries === 0 || !isConnectionError) throw error;
               
-              console.log(`[Database] Neon sleeping, waking up... Retrying ${model}.${operation} in ${delay}ms (${retries} attempts left)`);
+              console.log(`[Database] Neon pooler retry: Retrying ${model}.${operation} in ${delay}ms (${retries} attempts left)`);
               await new Promise((res) => setTimeout(res, delay));
-              delay += 500; // Exponential backoff slightly
+              delay += 500;
             }
           }
         },
@@ -36,28 +36,6 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClientSingleton | undefined;
 };
 
-// Safe startup diagnostics
-if (!globalForPrisma.prisma) {
-  const dbUrl = process.env.DATABASE_URL || '';
-  try {
-    if (dbUrl) {
-      const url = new URL(dbUrl);
-      console.log(`[Database] Initializing Prisma with host: ${url.hostname}, port: ${url.port || '5432'}`);
-    } else {
-      console.error('[Database] WARNING: DATABASE_URL is not set!');
-    }
-  } catch (e) {
-    console.error('[Database] WARNING: DATABASE_URL is invalid or malformed.');
-  }
-}
-
 export const prisma = globalForPrisma.prisma ?? prismaClientSingleton();
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
-
-// Temporary startup ping test
-prisma.$queryRawUnsafe('SELECT 1')
-  .then(() => console.log('[Database] Connection test SUCCESS.'))
-  .catch((err: any) => {
-    console.error('[Database] Connection test FAILED.', err.message);
-  });
